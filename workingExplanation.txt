@@ -1,0 +1,20 @@
+chatbot_engine.py
+
+We're doing RAG (Retrieval-Augmented Generation): 
+
+We embed:
+🧾 Cloud data chunks → input_type="search_document"
+❓ User queries → input_type="search_query"
+
+This way, Cohere optimizes embeddings differently:
+
+1. "search_document" tells Cohere: “These are the documents I want to search over.”
+2. "search_query" tells Cohere: “This is a question someone will ask.”
+
+This combo improves semantic similarity search accuracy — a core part of any chatbot using RAG.
+
+🔁 So:
+You use input_type="search_document" for indexing logs.
+And input_type="search_query" for comparing the user's live question.
+
+running:uvicorn app:app --reload --port 8001

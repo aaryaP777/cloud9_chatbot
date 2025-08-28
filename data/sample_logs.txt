@@ -1,0 +1,5 @@
+CPU usage on EC2 instance i-0321 spiked to 92% on 2025-07-15.
+IAM role AdminAccess was modified without approval at 2025-07-13 02:11 AM.
+CloudFront cost increased by 40% due to high image traffic.
+Security group sg-1234 is open to all IPs on port 22.
+RDS instance db-prod shows high latency in read operations since July 10.
