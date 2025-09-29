@@ -33,12 +33,17 @@ prompt = PromptTemplate(
     template="""
 You are an assistant helping with cloud optimization and security.
 
-Context: {context}
-Question: {question}
+Context from company logs:
+{context}
 
-Answer the question based only on the context. If the answer is not found, say "I'm not sure about that."
+User question: {question}
+
+Answer using the context if it is relevant.  
+If the context does not contain enough information, use your own knowledge to provide a helpful and accurate answer.  
+If both are possible, combine them.
 """
 )
+
 
 # Input model for API
 class QueryRequest(BaseModel):
@@ -55,22 +60,26 @@ async def chat(request: QueryRequest):
             status_code=400,
             detail="Request must include a 'question' field with a non-empty string"
         )
-        
+
     query = request.question
 
     # Retrieve similar documents
     docs = db.similarity_search(query, k=3)
-    context = "\n".join([doc.page_content for doc in docs])
+    context = "\n".join([doc.page_content for doc in docs]) if docs else "No relevant logs found."
 
     # Fill the prompt
     final_prompt = prompt.format(context=context, question=query)
 
-    # Use Cohere's generate endpoint
+    # Use Cohere's Chat API (instead of deprecated generate)
     import cohere
     co = cohere.Client(os.getenv("COHERE_API_KEY"))
-    response = co.generate(prompt=final_prompt, model="command-r-plus")
+
+    response = co.chat(
+        model="command-r-08-2024",
+        message=final_prompt,
+    )
 
     return {
-        "response": response.generations[0].text.strip(),
+        "response": response.text.strip(),
         "matched_docs": [doc.page_content for doc in docs]
     }

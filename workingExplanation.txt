@@ -1,20 +1,34 @@
-chatbot_engine.py
+1. chatbot_engine.py → Building the Knowledge Base
 
-We're doing RAG (Retrieval-Augmented Generation): 
+You have a text file sample_logs.txt with cloud/security events (EC2 CPU spike, IAM role modified, etc.).
+Each line of this file is turned into a document.
+These documents are converted into embeddings using Cohere’s embedding model "embed-english-v3.0".
+Embeddings = numerical vectors that capture the meaning of text.
+FAISS (Facebook AI Similarity Search) stores these vectors in a vector database (vector_store/).
+This allows fast “find similar documents” when a user asks a question.
+👉 So this step is about preparing memory for your chatbot.
 
-We embed:
-🧾 Cloud data chunks → input_type="search_document"
-❓ User queries → input_type="search_query"
+2. app.py → Serving User Queries
 
-This way, Cohere optimizes embeddings differently:
+The user sends a question through the frontend (/chat endpoint).
+Backend (app.py) does:
+Takes the user’s query (e.g., “why budget spurred last month”).
+Embeds it (same way as before) and searches in FAISS for the most similar logs (similarity_search)
+Example: finds “CloudFront cost increased by 40% …”.
+Builds a prompt that combines:
+The matched context (logs)
+The user’s question
+A fixed instruction ("You are an assistant helping with cloud optimization and security…").
+Sends this final prompt to Cohere’s command-r-08-2024 model via the Chat API.
+Gets back a natural language answer and returns it to the frontend.
+👉 This is Retrieval-Augmented Generation (RAG):
+FAISS = retrieval (fetching relevant logs)
+Cohere command-r = generation (turning logs + question into an answer)
 
-1. "search_document" tells Cohere: “These are the documents I want to search over.”
-2. "search_query" tells Cohere: “This is a question someone will ask.”
+3. Frontend (React) → User Interface
 
-This combo improves semantic similarity search accuracy — a core part of any chatbot using RAG.
+Shows the conversation (user messages + bot responses).
+Sends the query to FastAPI, gets back a response, and displays it.
+👉 This is the chat window where everything comes together.
 
-🔁 So:
-You use input_type="search_document" for indexing logs.
-And input_type="search_query" for comparing the user's live question.
-
-running:uvicorn app:app --reload --port 8001
+Running ==> uvicorn app:app --reload --port 8001
